@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectral Library Viewer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <svg class="logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="6" fill="#6366f1"/>
+                    <path d="M6 22 L10 12 L14 18 L18 8 L22 15 L26 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+                <div>
+                    <h1>Spectral Library Viewer</h1>
+                    <p class="subtitle">Interactive mineral & material spectral analysis</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="btn-load-sample" class="btn btn-secondary" title="Load built-in sample library">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 4v4.5l3.5 2.1.75-1.23-2.75-1.63V4h-1.5z"/></svg>
+                    Load Sample Library
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <aside class="sidebar">
+            <!-- Upload Section -->
+            <section class="panel upload-panel">
+                <h2 class="panel-title">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><path d="M9 1.5l-5 5h3.5v4h3v-4H14l-5-5zM2.5 13.5v2h13v-2h-13z"/></svg>
+                    Upload Spectra
+                </h2>
+                <div id="drop-zone" class="drop-zone">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M20 5v20M12 17l8 8 8-8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M5 25v8a2 2 0 002 2h26a2 2 0 002-2v-8" stroke-linecap="round"/>
+                    </svg>
+                    <p>Drag & drop spectral files here</p>
+                    <span class="drop-hint">CSV, SLI/HDR, or ASCII formats</span>
+                    <input type="file" id="file-input" multiple accept=".csv,.sli,.hdr,.txt,.asc,.ascii,.dat,.sed" hidden>
+                    <button class="btn btn-primary btn-sm" id="btn-browse">Browse Files</button>
+                </div>
+            </section>
+
+            <!-- Filter Section -->
+            <section class="panel filter-panel">
+                <h2 class="panel-title">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><path d="M1.5 2.25h15l-6 7.09v4.91l-3 1.5V9.34L1.5 2.25z"/></svg>
+                    Filters
+                </h2>
+                <div class="search-box">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M10 6.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0zm-.54 3.67a5 5 0 111.06-1.06l3.04 3.04-1.06 1.06-3.04-3.04z"/></svg>
+                    <input type="text" id="search-input" placeholder="Search minerals..." autocomplete="off">
+                </div>
+                <div class="category-filters" id="category-filters">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+            <!-- Spectra List -->
+            <section class="panel spectra-panel">
+                <div class="spectra-panel-header">
+                    <h2 class="panel-title">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><path d="M2 4h14v1.5H2V4zm0 4.25h14v1.5H2v-1.5zm0 4.25h10v1.5H2v-1.5z"/></svg>
+                        Spectra
+                        <span id="spectra-count" class="badge">0</span>
+                    </h2>
+                    <div class="spectra-actions">
+                        <button id="btn-select-all" class="btn-text" title="Select all">All</button>
+                        <button id="btn-select-none" class="btn-text" title="Deselect all">None</button>
+                    </div>
+                </div>
+                <div id="spectra-list" class="spectra-list">
+                    <div class="empty-state">
+                        <p>No spectra loaded</p>
+                        <span>Upload files or load the sample library</span>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <div class="main-content">
+            <!-- Plot Area -->
+            <section class="panel plot-panel">
+                <div class="plot-toolbar">
+                    <div class="plot-options">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="toggle-regions" checked>
+                            <span>Spectral Regions</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="toggle-grid" checked>
+                            <span>Grid</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="toggle-normalize">
+                            <span>Normalize</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="toggle-continuum">
+                            <span>Continuum Removal</span>
+                        </label>
+                    </div>
+                    <div class="plot-actions">
+                        <select id="y-axis-select" class="select-sm">
+                            <option value="reflectance">Reflectance</option>
+                            <option value="absorbance">Absorbance</option>
+                            <option value="emissivity">Emissivity</option>
+                        </select>
+                        <button id="btn-export-png" class="btn btn-secondary btn-sm" title="Export as PNG">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M11 8v3H3V8H1.5v3A1.5 1.5 0 003 12.5h8a1.5 1.5 0 001.5-1.5V8H11zM7.75 1.5h-1.5v5.44L4.53 5.22 3.47 6.28 7 9.81l3.53-3.53-1.06-1.06-1.72 1.72V1.5z"/></svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <div id="plot-container" class="plot-container">
+                    <div class="plot-placeholder">
+                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+                            <rect x="10" y="10" width="60" height="60" rx="4"/>
+                            <path d="M15 60 L25 35 L35 45 L45 20 L55 40 L65 25" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <p>Load spectral data to begin</p>
+                        <span>Upload CSV, SLI, or ASCII files, or load the sample library</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Info Panel -->
+            <section class="panel info-panel" id="info-panel" style="display:none;">
+                <h2 class="panel-title">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><path d="M9 1a8 8 0 100 16A8 8 0 009 1zm-.75 4h1.5v1.5h-1.5V5zm0 3h1.5v5h-1.5V8z"/></svg>
+                    Spectrum Details
+                </h2>
+                <div id="info-content" class="info-content"></div>
+            </section>
+
+            <!-- Metadata Panel -->
+            <section class="panel metadata-panel" id="metadata-panel" style="display:none;">
+                <h2 class="panel-title">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><path d="M3 2.5A1.5 1.5 0 014.5 1h6.586a1.5 1.5 0 011.06.44l2.415 2.414A1.5 1.5 0 0115 4.914V15.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 013 15.5v-13zM5.25 8h7.5v1.5h-7.5V8zm0 3h7.5v1.5h-7.5V11zm0-6h4.5v1.5h-4.5V5z"/></svg>
+                    File Metadata
+                </h2>
+                <div id="metadata-content" class="metadata-content"></div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>Spectral Library Viewer v1.0 &middot; Supports USGS, ASTER, JPL spectral library formats</p>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
